@@ -1242,6 +1242,41 @@ getgenv().is_l_closure = islclosure
 getgenv().iswriteable = function(tbl)
     return not table.isfrozen(tbl)
 end
+getgenv().debug.getupvalues = function(func, index)
+local debug = {}
+local upvaluesRegistry = {}
+	if type(func) ~= "function" then
+        error("Argument must be a function")
+    end
+
+    local upvalues = {}
+    local function captureUpvalues()
+        local dummy = 1
+        upvalues[1] = dummy
+        return function() end
+    end
+
+    local originalFunc = func
+    func = captureUpvalues()
+    originalFunc()
+
+    for i = 1, #upvalues do
+        upvalues[i] = upvalues[i]
+    end
+
+    if index then
+        return upvalues[index]
+    end
+
+    return upvalues
+end
+
+function debug.setupvalues(func, upvalues)
+    if type(func) ~= "function" then
+        error("Argument must be a function")
+    end
+    upvaluesRegistry[func] = upvalues
+end
 getgenv().string = string
 if not shared.vulnsm then 
 	local wrappercache = setmetatable({}, {__mode = "k"})
@@ -1492,7 +1527,7 @@ end
 print("[ Salad ]: Added functions to the env.")
 if not shared.notified then 
     game:GetService("StarterGui"):SetCore("SendNotification", {
-        Title = "Salad API Injected",
+        Title = "Caesar Salad Modified",
         Text = "Powered by Xeno\ndiscord.gg/getsalad",  -- xeno server: discord.gg/getxeno
         Duration = 2,
         Icon = "rbxassetid://84868819237025"
